@@ -1,0 +1,30 @@
+DJ PERFECT EVENTS — FIREBASE SETUP
+
+1. Firebase Console မှာ Project အသစ်လုပ်ပါ။
+2. Authentication:
+   - Sign-in method → Anonymous ကို Enable လုပ်ပါ။
+   - Email/Password ကို Enable လုပ်ပါ။
+   - Users မှာ Admin email/password account တစ်ခု Create လုပ်ပါ။
+3. Firestore Database ကို Create လုပ်ပါ။
+4. Firestore → Rules ထဲမှာ firestore.rules ဖိုင်က Rules ကို Paste → Publish လုပ်ပါ။
+5. Firestore collection `admins` ကို Create လုပ်ပါ။
+   - Document ID = Admin user ရဲ့ UID
+   - Field: role = admin
+6. Project Settings → Your apps → Web app ကို Register လုပ်ပါ။
+7. Firebase config JSON ကို Copy ပါ။
+8. Website ကိုဖွင့်ပြီး Firebase Setup box ထဲ Paste → Save Firebase Config လုပ်ပါ။
+9. GitHub/Vercel မှာ `index.html` တစ်ဖိုင်တည်း အသုံးပြုနိုင်ပါတယ်။
+
+Important:
+- Config JSON က secret password မဟုတ်ပေမယ့် Firestore Security Rules ကို မဖြစ်မနေ Publish လုပ်ပါ။
+- Payment screenshot upload အတွက် Cloud Storage လိုပါတယ်။ Firebase docs အရ Cloud Storage အသစ်အသုံးပြုရန် Blaze billing plan လိုနိုင်ပါတယ်။
+- Admin account ကို `admins/{UID}` document မထည့်မချင်း Rules အရ catalog/order/booking admin access မရပါ။
+
+PRODUCTION UPDATE — QR SCANNER
+- ScanApp iframe removed/not used.
+- Native mobile camera scanner uses html5-qrcode.
+- Staff must sign in with an Admin account before ticket lookup/check-in.
+- Confirmed tickets can be checked in once only.
+- Successful check-in writes status = "Checked In" and checkedInAt = server timestamp.
+- Contact is saved exactly as typed after trim; no @gmail.com is appended.
+- Deploy the included firestore.rules before production testing.

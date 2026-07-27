@@ -1,13 +1,223 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="my">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#070a12" />
-    <title>DJ PERFECT EVENTS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#070a12">
+<title>DJ PERFECT EVENTS — Firebase</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{cyan:'#00e5ff',purple:'#9b5cff',pink:'#ff2d8d',bg:'#070a12',card:'#111827'}}}}
+</script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+body{margin:0;min-height:100vh;color:#f8fafc;font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 10% 10%,rgba(0,229,255,.08),transparent 28%),radial-gradient(circle at 90% 12%,rgba(255,45,141,.08),transparent 28%),#070a12}
+.glass{background:rgba(17,24,39,.84);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08)}
+.card{transition:.2s}.card:hover{transform:translateY(-4px);border-color:rgba(0,229,255,.4)}
+.modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px}
+.hidden{display:none!important}.modal-open{overflow:hidden}
+#qrReader video{border-radius:16px} #qrReader{overflow:hidden} .scan-frame{border:1px solid rgba(0,229,255,.25);background:#050811;border-radius:18px;padding:10px}
+</style>
+</head>
+<body>
+<header class="sticky top-0 z-40 glass border-b border-slate-800">
+<div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center gap-3">
+<button id="homeBtn" class="flex items-center gap-3 text-left">
+<div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-pink via-purple to-cyan text-black font-black flex items-center justify-center">DJ</div>
+<div><h1 class="font-black text-sm sm:text-lg text-cyan">DJ PERFECT EVENTS</h1><p class="text-[10px] text-slate-400">Northern Angel Organizer Group</p></div>
+</button>
+<div class="flex gap-2">
+<span id="cloudStatus" class="hidden sm:inline-flex items-center px-3 rounded-xl bg-slate-800 text-xs text-slate-400">Connecting…</span>
+<button id="verifyNav" class="p-2.5 rounded-xl bg-slate-800"><i data-lucide="scan-line" class="w-5 h-5"></i></button>
+<button id="adminNav" class="p-2.5 rounded-xl bg-slate-800"><i data-lucide="shield" class="w-5 h-5"></i></button>
+<button id="cartNav" class="relative p-2.5 rounded-xl bg-slate-800"><i data-lucide="shopping-bag" class="w-5 h-5 text-cyan"></i><b id="cartBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-pink rounded-full text-[10px] items-center justify-center">0</b></button>
+</div>
+</div>
+</header>
+
+<section id="homePage" class="page">
+<main class="max-w-7xl mx-auto p-4 sm:p-6 space-y-8">
+<section class="glass rounded-3xl p-7 sm:p-11 bg-gradient-to-br from-purple/20 to-cyan/10">
+<span class="text-xs tracking-[.25em] text-cyan font-bold">LIVE • MYITKYINA</span>
+<h2 class="text-4xl sm:text-6xl font-black mt-4">Feel The Beat.<br><span class="text-pink">Own The Night.</span></h2>
+<p class="text-slate-300 mt-4 max-w-2xl">Cloud orders, event tickets, DJ tracks နှင့် private party booking ကို တစ်နေရာတည်းမှာ စီမံနိုင်ပါသည်။</p>
+<div class="flex gap-3 mt-6"><button id="eventsBtn" class="px-5 py-3 bg-gradient-to-r from-cyan to-purple text-black rounded-xl font-black">Event Tickets</button><button id="bookingBtn" class="px-5 py-3 bg-slate-900 rounded-xl font-bold">Private Party</button></div>
+</section>
+<section class="flex flex-col sm:flex-row gap-3 justify-between">
+<div class="flex gap-2 overflow-auto">
+<button class="filter px-4 py-2 rounded-xl bg-purple text-xs font-bold" data-v="all">All</button>
+<button class="filter px-4 py-2 rounded-xl bg-slate-800 text-xs font-bold" data-v="track">Tracks</button>
+<button class="filter px-4 py-2 rounded-xl bg-slate-800 text-xs font-bold" data-v="event">Events</button>
+<button class="filter px-4 py-2 rounded-xl bg-slate-800 text-xs font-bold" data-v="private">Private</button>
+</div>
+<input id="search" placeholder="Search…" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 sm:w-72">
+</section>
+<section id="catalog" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></section>
+</main>
+</section>
+
+<section id="adminPage" class="page hidden">
+<div id="adminLogin" class="min-h-[80vh] flex items-center justify-center p-4">
+<div class="glass rounded-3xl max-w-md w-full p-7 space-y-4 text-center">
+<i data-lucide="lock-keyhole" class="w-12 h-12 mx-auto text-purple"></i>
+<h2 class="text-2xl font-black">Admin Login</h2>
+<input id="adminEmail" type="email" placeholder="Admin email" class="w-full bg-slate-900 rounded-xl px-4 py-3">
+<input id="adminPassword" type="password" placeholder="Password" class="w-full bg-slate-900 rounded-xl px-4 py-3">
+<button id="loginBtn" class="w-full py-3 bg-gradient-to-r from-cyan to-purple text-black rounded-xl font-black">Login</button>
+<p id="loginMsg" class="text-xs text-red-400"></p>
+</div>
+</div>
+<div id="dashboard" class="hidden max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+<div class="flex justify-between"><div><h2 class="text-3xl font-black">Admin Dashboard</h2><p id="adminUser" class="text-xs text-slate-400"></p></div><button id="logoutBtn" class="px-4 py-2 rounded-xl bg-red-500/15 text-red-400">Logout</button></div>
+<div id="metrics" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+<div class="grid lg:grid-cols-2 gap-6"><div class="glass rounded-2xl p-5"><h3 class="font-black text-xl">Orders</h3><div id="orders" class="mt-3"></div></div><div class="glass rounded-2xl p-5"><h3 class="font-black text-xl">Bookings</h3><div id="bookings" class="mt-3"></div></div></div>
+<div class="glass rounded-2xl p-5 space-y-4">
+<h3 class="font-black text-xl">Catalog Manager</h3>
+<div class="grid sm:grid-cols-2 gap-3">
+<input id="nTitle" placeholder="Title" class="bg-slate-900 rounded-xl px-3 py-2"><select id="nType" class="bg-slate-900 rounded-xl px-3 py-2"><option value="track">Track</option><option value="event">Event</option><option value="private">Private</option></select>
+<input id="nPrice" type="number" placeholder="Price MMK" class="bg-slate-900 rounded-xl px-3 py-2"><input id="nMeta" placeholder="Meta / Date" class="bg-slate-900 rounded-xl px-3 py-2">
+<input id="nImage" placeholder="Image URL" class="sm:col-span-2 bg-slate-900 rounded-xl px-3 py-2">
+</div>
+<button id="addBtn" class="px-5 py-3 bg-cyan text-black rounded-xl font-black">Add Item</button>
+<div id="adminCatalog" class="grid sm:grid-cols-2 gap-3"></div>
+</div>
+</div>
+</section>
+
+<section id="verifyPage" class="page hidden">
+<main class="max-w-lg mx-auto p-4 space-y-5">
+<div><h2 class="text-3xl font-black">QR Ticket Scanner</h2><p class="text-slate-400 mt-1">Camera ဖြင့် ticket QR ကို scan လုပ်ပါ။ Admin login လိုအပ်ပါသည်။</p></div>
+<div class="glass rounded-2xl p-4 space-y-3">
+  <div id="scannerAuthNote" class="rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-3 text-sm text-yellow-300">Scanner အသုံးပြုရန် Admin Login ဝင်ထားရပါမည်။</div>
+  <div class="scan-frame"><div id="qrReader" class="min-h-48 flex items-center justify-center text-slate-500 text-sm">Camera မဖွင့်ရသေးပါ</div></div>
+  <div class="grid grid-cols-2 gap-3"><button id="startScanBtn" class="py-3 bg-gradient-to-r from-cyan to-purple text-black rounded-xl font-black">Open Camera</button><button id="stopScanBtn" class="py-3 bg-slate-800 rounded-xl font-bold">Stop Camera</button></div>
+  <label class="block w-full py-3 bg-slate-800 rounded-xl font-bold text-center cursor-pointer">Scan QR Image<input id="scanFile" type="file" accept="image/*" class="hidden"></label>
+</div>
+<div class="glass rounded-2xl p-5 space-y-3"><input id="ticketInput" placeholder="TKT-xxxxxxxx" class="w-full bg-slate-900 rounded-xl px-4 py-3"><button id="verifyBtn" class="w-full py-3 bg-gradient-to-r from-cyan to-purple text-black rounded-xl font-black">Verify Ticket</button></div>
+<div id="verifyResult" class="glass rounded-2xl p-5 text-slate-400">Scan result will appear here.</div>
+</main>
+</section>
+
+<div id="cartModal" class="modal hidden"><div class="bg-card border border-slate-800 rounded-3xl max-w-lg w-full p-6 max-h-[92vh] overflow-auto">
+<div class="flex justify-between"><h3 class="text-xl font-black">Cart</h3><button data-close="cartModal">✕</button></div><div id="cartList" class="space-y-3 mt-4"></div>
+<div class="border-t border-slate-800 mt-4 pt-4 space-y-3"><div class="flex justify-between"><span>Total</span><b id="cartTotal" class="text-cyan"></b></div>
+<input id="contact" placeholder="Phone or Email" class="w-full bg-slate-900 rounded-xl px-3 py-3"><select id="payment" class="w-full bg-slate-900 rounded-xl px-3 py-3"><option>KBZPay</option><option>WavePay</option><option>CB Pay</option></select>
+<button id="checkoutBtn" class="w-full py-3 bg-gradient-to-r from-cyan to-pink text-black rounded-xl font-black">Create Order & QR</button></div></div></div>
+
+<div id="bookingModal" class="modal hidden"><div class="bg-card border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-3">
+<div class="flex justify-between"><h3 class="text-xl font-black">Private Booking</h3><button data-close="bookingModal">✕</button></div>
+<input id="bName" placeholder="Name" class="w-full bg-slate-900 rounded-xl px-3 py-3"><input id="bPhone" placeholder="Phone" class="w-full bg-slate-900 rounded-xl px-3 py-3"><input id="bDate" type="date" class="w-full bg-slate-900 rounded-xl px-3 py-3"><input id="bLocation" placeholder="Location" class="w-full bg-slate-900 rounded-xl px-3 py-3"><select id="bPackage" class="w-full bg-slate-900 rounded-xl px-3 py-3"><option>Birthday Party</option><option>Wedding</option><option>VIP Club Night</option><option>Corporate Event</option></select><textarea id="bNote" placeholder="Requirements" class="w-full bg-slate-900 rounded-xl px-3 py-3"></textarea>
+<button id="bookingSubmit" class="w-full py-3 bg-gradient-to-r from-purple to-pink rounded-xl font-black">Send Booking</button></div></div>
+
+<div id="ticketModal" class="modal hidden"><div class="bg-card border border-slate-800 rounded-3xl max-w-md w-full p-6 text-center space-y-4">
+<h3 class="text-xl font-black text-green-400">Order Created</h3><p id="ticketId" class="font-mono text-cyan"></p><div class="inline-block bg-white p-3 rounded-xl"><canvas id="qr"></canvas></div><p class="text-xs text-slate-400">Pending Verification ဖြစ်ပါသည်။</p><button data-close="ticketModal" class="w-full py-3 bg-slate-800 rounded-xl">Close</button></div></div>
+
+<div id="setupModal" class="modal hidden"><div class="bg-card border border-slate-800 rounded-3xl max-w-xl w-full p-6 space-y-4">
+<h3 class="text-xl font-black">Firebase Setup</h3><p class="text-sm text-slate-400">Firebase Console → Project Settings → Your apps → Web app မှ Config JSON ကို copy/paste လုပ်ပါ။</p>
+<textarea id="configText" rows="10" class="w-full bg-slate-900 rounded-xl p-3 font-mono text-xs" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+<button id="saveConfig" class="w-full py-3 bg-cyan text-black rounded-xl font-black">Save Firebase Config</button><button id="demoMode" class="w-full py-3 bg-slate-800 rounded-xl">Use Offline Demo</button><p id="setupError" class="text-xs text-red-400"></p>
+</div></div>
+
+<script type="module">
+const seed=[
+{id:'seed1',type:'track',title:'Midnight Myitkyina',price:5000,meta:'Future Bass • 128 BPM',image:'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80'},
+{id:'seed2',type:'track',title:'Dead With Ego',price:8000,meta:'Trap • 135 BPM',image:'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80'},
+{id:'seed3',type:'event',title:'DJ PERFECT Neon Night',price:25000,meta:'Myitkyina',image:'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80'},
+{id:'seed4',type:'private',title:'VIP Club Party',price:850000,meta:'Premium Setup',image:'https://images.unsplash.com/photo-1566737236500-c8ac43014a8e?auto=format&fit=crop&w=900&q=80'}];
+const $=id=>document.getElementById(id),money=n=>Number(n||0).toLocaleString('en-US')+' MMK';
+let catalog=[],orders=[],bookings=[],cart=JSON.parse(localStorage.getItem('dj_cloud_cart')||'[]'),filter='all',cloud=false,fb={},qrScanner=null,scanBusy=false,lastVerified=null,unsubOrders=null,unsubBookings=null;
+function icons(){window.lucide?.createIcons()} function status(t,c='text-slate-400'){$('cloudStatus').textContent=t;$('cloudStatus').className='hidden sm:inline-flex items-center px-3 rounded-xl bg-slate-800 text-xs '+c}
+function page(n){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(n+'Page').classList.remove('hidden');if(n==='admin')authView();icons();scrollTo(0,0)}
+function modal(id,on=true){$(id).classList.toggle('hidden',!on);document.body.classList.toggle('modal-open',on);icons()}
+function render(){let q=$('search').value.toLowerCase(),r=catalog.filter(x=>(filter==='all'||x.type===filter)&&(!q||(`${x.title} ${x.meta}`).toLowerCase().includes(q)));$('catalog').innerHTML=r.map(x=>`<article class="card glass rounded-2xl overflow-hidden"><div class="relative h-52"><img src="${x.image}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent"></div><span class="absolute top-3 left-3 bg-black/60 rounded-lg px-2 py-1 text-[10px] uppercase">${x.type}</span><div class="absolute bottom-3 left-3 right-3"><b>${x.title}</b><p class="text-xs text-slate-300">${x.meta}</p><strong class="text-cyan">${money(x.price)}</strong></div></div><button class="act w-[calc(100%-24px)] m-3 py-3 bg-gradient-to-r from-purple to-pink rounded-xl font-black" data-id="${x.id}" data-type="${x.type}">${x.type==='private'?'Book Now':'Add to Cart'}</button></article>`).join('');document.querySelectorAll('.act').forEach(b=>b.onclick=()=>b.dataset.type==='private'?modal('bookingModal'):addCart(b.dataset.id));icons()}
+function addCart(id){let x=catalog.find(i=>i.id===id),e=cart.find(i=>i.id===id);e?e.qty++:cart.push({...x,qty:1});localStorage.setItem('dj_cloud_cart',JSON.stringify(cart));badge()}
+function badge(){let n=cart.reduce((s,x)=>s+x.qty,0);$('cartBadge').textContent=n;$('cartBadge').classList.toggle('hidden',!n);$('cartBadge').classList.toggle('flex',!!n)}
+function drawCart(){$('cartList').innerHTML=cart.length?cart.map(x=>`<div class="bg-slate-900 p-3 rounded-xl flex gap-3"><img src="${x.image}" class="w-14 h-14 object-cover rounded-lg"><div class="flex-1"><b>${x.title}</b><p class="text-xs text-cyan">${money(x.price)} × ${x.qty}</p></div><button class="remove text-red-400" data-id="${x.id}">✕</button></div>`).join(''):'<p class="text-slate-500 text-center py-8">Empty cart</p>';$('cartTotal').textContent=money(cart.reduce((s,x)=>s+x.price*x.qty,0));document.querySelectorAll('.remove').forEach(b=>b.onclick=()=>{cart=cart.filter(x=>x.id!==b.dataset.id);localStorage.setItem('dj_cloud_cart',JSON.stringify(cart));badge();drawCart()})}
+async function init(){
+ const saved=localStorage.getItem('dj_firebase_config');
+ if(!saved){modal('setupModal');offline();return}
+ try{
+  const config=JSON.parse(saved);
+  const appMod=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js');
+  const authMod=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js');
+  const fsMod=await import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js');
+  const app=appMod.initializeApp(config),auth=authMod.getAuth(app),db=fsMod.getFirestore(app);
+  fb={...authMod,...fsMod,auth,db};cloud=true;status('Cloud Live','text-green-400');
+  try{await authMod.signInAnonymously(auth)}catch(e){console.warn('Anonymous auth:',e)}
+  fsMod.onSnapshot(fsMod.collection(db,'catalog'),s=>{catalog=s.docs.map(d=>({id:d.id,...d.data()}));if(!catalog.length)catalog=seed;render();adminRender()});
+  authMod.onAuthStateChanged(auth,u=>{window.currentUser=u;subscribeProtected();authView()});
+ }catch(e){console.error(e);status('Config Error','text-red-400');$('setupError').textContent=e.message;modal('setupModal')}
+}
+
+function subscribeProtected(){
+ if(unsubOrders){unsubOrders();unsubOrders=null}if(unsubBookings){unsubBookings();unsubBookings=null}
+ if(!cloud||!scannerAdmin()){orders=[];bookings=[];adminRender();return}
+ unsubOrders=fb.onSnapshot(fb.collection(fb.db,'orders'),s=>{orders=s.docs.map(d=>({id:d.id,...d.data()}));adminRender()},e=>console.error('Orders listener:',e));
+ unsubBookings=fb.onSnapshot(fb.collection(fb.db,'bookings'),s=>{bookings=s.docs.map(d=>({id:d.id,...d.data()}));adminRender()},e=>console.error('Bookings listener:',e));
+}
+function offline(){cloud=false;catalog=JSON.parse(localStorage.getItem('off_catalog')||'null')||seed;orders=JSON.parse(localStorage.getItem('off_orders')||'[]');bookings=JSON.parse(localStorage.getItem('off_bookings')||'[]');status('Offline Demo','text-yellow-400');render()}
+async function addDocCloud(col,data){if(cloud)return fb.addDoc(fb.collection(fb.db,col),data);let a=col==='orders'?orders:bookings;a.unshift({id:crypto.randomUUID(),...data});localStorage.setItem(col==='orders'?'off_orders':'off_bookings',JSON.stringify(a));adminRender();return{id:a[0].id}}
+async function updateCloud(col,id,data){if(cloud)return fb.updateDoc(fb.doc(fb.db,col,id),data);let a=col==='orders'?orders:bookings,x=a.find(v=>v.id===id);Object.assign(x,data);localStorage.setItem(col==='orders'?'off_orders':'off_bookings',JSON.stringify(a));adminRender()}
+async function delCloud(col,id){if(cloud)return fb.deleteDoc(fb.doc(fb.db,col,id));catalog=catalog.filter(x=>x.id!==id);localStorage.setItem('off_catalog',JSON.stringify(catalog));render();adminRender()}
+async function checkout(){if(!cart.length)return alert('Cart empty');if(!$('contact').value.trim())return alert('Contact required');let data={ticketCode:'TKT-'+Date.now().toString().slice(-8),contact:$('contact').value.trim(),payment:$('payment').value,total:cart.reduce((s,x)=>s+x.price*x.qty,0),status:'Pending Verification',createdAt:new Date().toISOString(),items:cart};let ref=await addDocCloud('orders',data);$('ticketId').textContent=data.ticketCode;QRCode.toCanvas($('qr'),JSON.stringify({docId:ref.id,ticketCode:data.ticketCode}),{width:170});cart=[];localStorage.setItem('dj_cloud_cart','[]');badge();modal('cartModal',false);modal('ticketModal')}
+async function book(){let data={name:$('bName').value.trim(),phone:$('bPhone').value.trim(),date:$('bDate').value,location:$('bLocation').value.trim(),package:$('bPackage').value,note:$('bNote').value.trim(),status:'Pending',createdAt:new Date().toISOString()};if(!data.name||!data.phone||!data.date||!data.location)return alert('Required fields missing');await addDocCloud('bookings',data);modal('bookingModal',false);alert('Booking sent')}
+async function login(){try{await fb.signInWithEmailAndPassword(fb.auth,$('adminEmail').value,$('adminPassword').value)}catch(e){$('loginMsg').textContent=e.message}}
+async function authView(){let u=window.currentUser,isAdmin=u&&!u.isAnonymous;$('adminLogin').classList.toggle('hidden',isAdmin);$('dashboard').classList.toggle('hidden',!isAdmin);scannerNote();if(isAdmin){$('adminUser').textContent=u.email;adminRender()}}
+function adminRender(){if(!$('dashboard')||$('dashboard').classList.contains('hidden'))return;$('metrics').innerHTML=[['Catalog',catalog.length],['Orders',orders.length],['Revenue',money(orders.reduce((s,x)=>s+Number(x.total||0),0))],['Bookings',bookings.length]].map(x=>`<div class="glass rounded-2xl p-4"><small class="text-slate-400">${x[0]}</small><h3 class="text-xl font-black mt-2">${x[1]}</h3></div>`).join('');$('orders').innerHTML=orders.length?orders.map(x=>`<div class="border-b border-slate-800 py-3 text-xs"><b>${x.ticketCode||x.id}</b><p class="text-slate-400">${x.contact} • ${money(x.total)}</p><select class="ost bg-slate-900 rounded-lg p-2 mt-2" data-id="${x.id}">${['Pending Verification','Confirmed','Checked In','Rejected'].map(s=>`<option ${x.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`).join(''):'<p class="text-slate-500">No orders</p>';$('bookings').innerHTML=bookings.length?bookings.map(x=>`<div class="border-b border-slate-800 py-3 text-xs"><b>${x.name} • ${x.package}</b><p class="text-slate-400">${x.date} • ${x.location}</p><select class="bst bg-slate-900 rounded-lg p-2 mt-2" data-id="${x.id}">${['Pending','Confirmed','Completed','Cancelled'].map(s=>`<option ${x.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`).join(''):'<p class="text-slate-500">No bookings</p>';$('adminCatalog').innerHTML=catalog.map(x=>`<div class="bg-slate-900 rounded-xl p-3 flex gap-3"><img src="${x.image}" class="w-14 h-14 object-cover rounded-lg"><div class="flex-1"><b>${x.title}</b><p class="text-xs text-slate-400">${x.type} • ${money(x.price)}</p></div><button class="del text-red-400" data-id="${x.id}">✕</button></div>`).join('');document.querySelectorAll('.ost').forEach(e=>e.onchange=()=>updateCloud('orders',e.dataset.id,{status:e.value}));document.querySelectorAll('.bst').forEach(e=>e.onchange=()=>updateCloud('bookings',e.dataset.id,{status:e.value}));document.querySelectorAll('.del').forEach(e=>e.onclick=()=>delCloud('catalog',e.dataset.id));icons()}
+async function addItem(){let d={title:$('nTitle').value.trim(),type:$('nType').value,price:Number($('nPrice').value),meta:$('nMeta').value.trim(),image:$('nImage').value.trim()||seed[0].image};if(!d.title||!d.price)return alert('Title and price required');if(cloud)await fb.addDoc(fb.collection(fb.db,'catalog'),d);else{catalog.unshift({id:crypto.randomUUID(),...d});localStorage.setItem('off_catalog',JSON.stringify(catalog));render();adminRender()}}
+function parseTicketValue(raw){
+ try{let v=JSON.parse(raw);return String(v.ticketCode||v.docId||raw).trim()}catch(e){return String(raw||'').trim()}
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function scannerAdmin(){return !!(window.currentUser&&!window.currentUser.isAnonymous)}
+function scannerNote(){if(!$('scannerAuthNote'))return;let ok=scannerAdmin();$('scannerAuthNote').classList.toggle('hidden',ok);$('startScanBtn').disabled=!ok;$('scanFile').disabled=!ok}
+async function findTicket(q){
+ q=parseTicketValue(q);if(!q)return null;
+ let local=orders.find(o=>o.ticketCode===q||o.id===q);if(local||!cloud)return local||null;
+ if(!scannerAdmin())throw new Error('Admin Login ဝင်ပြီးမှ ticket စစ်နိုင်ပါသည်။');
+ let snap=await fb.getDocs(fb.query(fb.collection(fb.db,'orders'),fb.where('ticketCode','==',q),fb.limit(1)));
+ if(!snap.empty){let d=snap.docs[0];return{id:d.id,...d.data()}}
+ try{let d=await fb.getDoc(fb.doc(fb.db,'orders',q));if(d.exists())return{id:d.id,...d.data()}}catch(e){}
+ return null;
+}
+function showTicket(x){
+ lastVerified=x||null;
+ if(!x){$('verifyResult').innerHTML='<b class="text-red-400 text-xl">INVALID TICKET</b><p class="mt-2">Ticket not found.</p>';return}
+ let st=x.status||'Unknown',checked=x.checkedInAt?.toDate?x.checkedInAt.toDate().toLocaleString():x.checkedInAt||'';
+ if(st==='Checked In'){$('verifyResult').innerHTML=`<b class="text-red-400 text-xl">TICKET ALREADY USED</b><p class="mt-3">Ticket: ${esc(x.ticketCode||x.id)}</p><p>Contact: ${esc(x.contact)}</p><p>Checked in: ${esc(checked||'Previously')}</p>`;return}
+ if(st!=='Confirmed'){$('verifyResult').innerHTML=`<b class="text-yellow-300 text-xl">${esc(st.toUpperCase())}</b><p class="mt-3">Ticket: ${esc(x.ticketCode||x.id)}</p><p>Contact: ${esc(x.contact)}</p><p>Payment: ${esc(x.payment)}</p><p>Total: ${money(x.total)}</p><p class="mt-3 text-yellow-200">Check-in ခွင့်မပြုပါ။ Order ကို Confirmed အရင်ပြောင်းပါ။</p>`;return}
+ $('verifyResult').innerHTML=`<b class="text-green-400 text-xl">VALID TICKET</b><div class="mt-3 space-y-1"><p>Ticket: ${esc(x.ticketCode||x.id)}</p><p>Contact: ${esc(x.contact)}</p><p>Payment: ${esc(x.payment)}</p><p>Total: ${money(x.total)}</p><p>Status: ${esc(st)}</p></div><button id="checkinBtn" class="w-full mt-4 py-3 bg-green-500 text-black rounded-xl font-black">Confirm Check-in</button>`;
+ $('checkinBtn').onclick=confirmCheckin;
+}
+async function verify(raw){
+ let q=parseTicketValue(raw||$('ticketInput').value);$('ticketInput').value=q;
+ $('verifyResult').innerHTML='<span class="text-cyan">Checking ticket…</span>';
+ try{let x=await findTicket(q);showTicket(x)}catch(e){$('verifyResult').innerHTML=`<b class="text-red-400">Verification failed</b><p class="mt-2">${esc(e.message)}</p>`}
+}
+async function confirmCheckin(){
+ if(!lastVerified||!scannerAdmin())return alert('Admin Login required');
+ let btn=$('checkinBtn');if(btn){btn.disabled=true;btn.textContent='Checking in…'}
+ try{
+  if(cloud){
+   let ref=fb.doc(fb.db,'orders',lastVerified.id);
+   await fb.runTransaction(fb.db,async tx=>{let snap=await tx.get(ref);if(!snap.exists())throw new Error('Ticket not found');let d=snap.data();if(d.status==='Checked In')throw new Error('Ticket already used');if(d.status!=='Confirmed')throw new Error('Only confirmed tickets can check in');tx.update(ref,{status:'Checked In',checkedInAt:fb.serverTimestamp()})});
+  }else{await updateCloud('orders',lastVerified.id,{status:'Checked In',checkedInAt:new Date().toISOString()})}
+  if(navigator.vibrate)navigator.vibrate([120,60,180]);
+  try{let ac=new (window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(ac.currentTime+.18)}catch(e){}
+  lastVerified={...lastVerified,status:'Checked In',checkedInAt:new Date().toLocaleString()};showTicket(lastVerified);
+ }catch(e){alert(e.message);await verify(lastVerified.ticketCode||lastVerified.id)}
+}
+async function startScanner(){
+ if(!scannerAdmin())return alert('Admin Login ဝင်ပါ');
+ if(scanBusy)return;scanBusy=true;
+ try{if(!qrScanner)qrScanner=new Html5Qrcode('qrReader');await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:240,height:240}},async text=>{await stopScanner();verify(text)},()=>{});$('startScanBtn').textContent='Camera Running'}catch(e){$('verifyResult').innerHTML=`<b class="text-red-400">Camera မဖွင့်နိုင်ပါ</b><p class="mt-2">Camera permission ကို Allow လုပ်ပြီး HTTPS website မှ ပြန်စမ်းပါ။ ${esc(e.message||e)}</p>`}finally{scanBusy=false}
+}
+async function stopScanner(){if(qrScanner){try{if(qrScanner.isScanning)await qrScanner.stop()}catch(e){}try{await qrScanner.clear()}catch(e){}qrScanner=null}$('startScanBtn').textContent='Open Camera'}
+async function scanImage(file){if(!file||!scannerAdmin())return;await stopScanner();try{let temp=new Html5Qrcode('qrReader');let text=await temp.scanFile(file,true);await temp.clear();verify(text)}catch(e){$('verifyResult').innerHTML=`<b class="text-red-400">QR image မဖတ်နိုင်ပါ</b><p class="mt-2">${esc(e.message||e)}</p>`}}
+
+$('homeBtn').onclick=()=>{stopScanner();page('home')};$('verifyNav').onclick=()=>page('verify');$('adminNav').onclick=()=>{stopScanner();page('admin')};$('cartNav').onclick=()=>{drawCart();modal('cartModal')};$('eventsBtn').onclick=()=>{filter='event';render()};$('bookingBtn').onclick=()=>modal('bookingModal');$('search').oninput=render;document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{filter=b.dataset.v;document.querySelectorAll('.filter').forEach(x=>x.className='filter px-4 py-2 rounded-xl '+(x===b?'bg-purple':'bg-slate-800')+' text-xs font-bold');render()});document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>modal(b.dataset.close,false));$('checkoutBtn').onclick=checkout;$('bookingSubmit').onclick=book;$('loginBtn').onclick=login;$('logoutBtn').onclick=()=>fb.signOut(fb.auth);$('addBtn').onclick=addItem;$('verifyBtn').onclick=()=>verify();$('startScanBtn').onclick=startScanner;$('stopScanBtn').onclick=stopScanner;$('scanFile').onchange=e=>scanImage(e.target.files[0]);$('saveConfig').onclick=()=>{try{JSON.parse($('configText').value);localStorage.setItem('dj_firebase_config',$('configText').value);location.reload()}catch(e){$('setupError').textContent='JSON format မမှန်ပါ'}};$('demoMode').onclick=()=>modal('setupModal',false);
+badge();icons();init();
+</script>
+</body></html>
